@@ -31,8 +31,6 @@ const PlayerFactory = (name, id, sign) => {
 }
 
 
-
-
 let Controller = (() => {
     const player1 = PlayerFactory("Hans", 0, 'X')
     const player2 = PlayerFactory("Jürgen", 1, 'O')
