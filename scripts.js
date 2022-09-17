@@ -26,14 +26,14 @@ let board = [
         [null, 3, null]
     ]
 */
-const PlayerFactory = (name, id, sign) => {
-    return {name, id, sign}
+const PlayerFactory = (id, sign) => {
+    return {id, sign}
 }
 
 
 let Controller = (() => {
-    const player1 = PlayerFactory("Hans", 0, 'X')
-    const player2 = PlayerFactory("Jürgen", 1, 'O')
+    const player1 = PlayerFactory(0, 'X')
+    const player2 = PlayerFactory(1, 'O')
 
     let gameWinner = null
     let turn = player1
@@ -119,3 +119,24 @@ let Controller = (() => {
 
     return {takeTurn, checkWinner, gameWinner}
 })()
+
+
+function setUpGUI(){
+    const board = document.querySelector(".board")
+    for(let i = 0; i < 3; i++){
+        for(let j = 0; j < 3; j++){
+            let field = document.createElement('div')
+            field.setAttribute('id_x', i)
+            field.setAttribute('id_y', j)
+            field.classList.add('field')
+            field.addEventListener('click', takeTurnGUI)
+            board.appendChild(field)
+        }
+    }
+}
+
+function takeTurnGUI(){
+    Controller.takeTurn()
+}
+
+setUpGUI()
