@@ -20,7 +20,14 @@ const GameBoard = (() => {
         }
         return true
     }
-    return { setBoardItem, getBoard, boardFull }
+    const resetBoard = () => {
+        board = [
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
+        ] 
+    }
+    return { setBoardItem, getBoard, boardFull, resetBoard}
 })()
 
 const PlayerFactory = (id, sign, picture) => {
@@ -117,7 +124,13 @@ const Controller = (() => {
         return false
     }
 
-    return { takeTurn, checkWinner, getWinner, getTurn }
+    const restartGame = () => {
+        GameBoard.resetBoard()
+        gameWinner = null
+        turn = player1 
+    }
+
+    return { takeTurn, checkWinner, getWinner, getTurn, restartGame }
 })()
 
 
@@ -131,15 +144,16 @@ const displayController = (() => {
         if (Controller.takeTurn(x, y)) {
             e.target.style.backgroundImage =`url("${currentPlayer.picture}")`
             if (Controller.getWinner()) {
-                gameStatus.textContent = `Player ${Controller.getWinner()} wins`
+                gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
             } else {
-                (GameBoard.boardFull()) ? gameStatus.textContent = `No one wins` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
+                (GameBoard.boardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
             }
         }
     }
 
     const setUp = () => {
         const board = document.querySelector(".board")
+        board.innerHTML = ""
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 let field = document.createElement('div')
@@ -154,7 +168,11 @@ const displayController = (() => {
         gameStatus.textContent = `Player ${Controller.getTurn().sign} starts`
     }
 
-    return { setUp, takeTurnGUI }
+    const restartGame = () => {
+        Controller.restartGame()
+        setUp()
+    }
+    return { setUp, takeTurnGUI, restartGame }
 })()
 
 displayController.setUp()
