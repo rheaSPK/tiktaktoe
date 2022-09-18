@@ -6,13 +6,21 @@ const GameBoard = (() => {
     ]
     const getBoard = () => board
     const setBoardItem = (x, y, value) => {
-        if (board[x][y] === null){
+        if (board[x][y] == null){
             board[x][y] = value
             return true
         }
         return false
     }
-    return {setBoardItem, getBoard}
+    const boardFull = () => {
+        for(let i = 0; i< 3; i++){
+            for(let j = 0; j < 3; j++){
+                if(board[i][j] == null) return false
+            }
+        }
+        return true
+    }
+    return {setBoardItem, getBoard, boardFull}
 })()
 
 /*
@@ -31,14 +39,17 @@ const PlayerFactory = (id, sign) => {
 }
 
 
-let Controller = (() => {
+const Controller = (() => {
     const player1 = PlayerFactory(0, 'X')
     const player2 = PlayerFactory(1, 'O')
 
     let gameWinner = null
     let turn = player1
 
-    const checkWinner = () => {
+    const getWinner = () => gameWinner
+    const getTurn = () => turn
+
+    const checkWinner = function(){
         let board = GameBoard.getBoard()
         let winner = _winnerInARow(board) || _winnerInAColumn(board) || _winnerOnLRDiagonal(board) || _winnerOnRLDiagonal(board)
         if(winner) {
@@ -105,7 +116,7 @@ let Controller = (() => {
         return false
     }
 
-    const takeTurn = (x, y) => {
+    const takeTurn = (x,y) => {
         //already a winner?
         if(gameWinner != null) return false;
         // setting value worked?
@@ -117,26 +128,39 @@ let Controller = (() => {
         return false
     }
 
-    return {takeTurn, checkWinner, gameWinner}
+    return {takeTurn, checkWinner, getWinner, getTurn}
 })()
 
 
-function setUpGUI(){
-    const board = document.querySelector(".board")
-    for(let i = 0; i < 3; i++){
-        for(let j = 0; j < 3; j++){
-            let field = document.createElement('div')
-            field.setAttribute('id_x', i)
-            field.setAttribute('id_y', j)
-            field.classList.add('field')
-            field.addEventListener('click', takeTurnGUI)
-            board.appendChild(field)
+const displayController = (() => {
+    const takeTurnGUI = (e) => {
+        const winnerElement = document.querySelector(".winner")
+        let currentPlayer = Controller.getTurn()
+        if(Controller.takeTurn(e.target.getAttribute('id_x'), e.target.getAttribute('id_y'))){
+            e.target.textContent = currentPlayer.sign
+            if(Controller.getWinner()){
+                winnerElement.textContent = `Player ${Controller.getWinner()} wins`
+            } else {
+                if(GameBoard.boardFull()) winnerElement.textContent = `No one wins`
+            }
         }
     }
-}
 
-function takeTurnGUI(){
-    Controller.takeTurn()
-}
+    const setUp = () => {
+        const board = document.querySelector(".board")
+        for(let i = 0; i < 3; i++){
+            for(let j = 0; j < 3; j++){
+                let field = document.createElement('div')
+                field.setAttribute('id_x', i)
+                field.setAttribute('id_y', j)
+                field.classList.add('field')
+                field.addEventListener('click', takeTurnGUI)
+                board.appendChild(field)
+            }
+        }
+    }
 
-setUpGUI()
+    return{setUp, takeTurnGUI}
+})()
+
+displayController.setUp()
