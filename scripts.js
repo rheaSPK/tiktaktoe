@@ -46,10 +46,10 @@ const GameBoardFactory = (board = [
     let _winnerInARow = (board) => {
         for (let i = 0; i < 3; i++) {
             let potentialWinner = board[i][0];
-            if (potentialWinner == null) break
+            if (potentialWinner == null) continue
             //potentialWinner is not the Winner
             let isNotWinner = false
-            for (let j = 1; j < 3; j++) {
+            for (let j = 0; j < 3; j++) {
                 if (board[i][j] != potentialWinner) isNotWinner = true
             }
             if (!isNotWinner) {
@@ -62,9 +62,9 @@ const GameBoardFactory = (board = [
     let _winnerInAColumn = (board) => {
         for (let i = 0; i < 3; i++) {
             let potentialWinner = board[0][i];
-            if (potentialWinner == null) break
+            if (potentialWinner == null) continue
             let isNotWinner = false
-            for (let j = 1; j < 3; j++) {
+            for (let j = 0; j < 3; j++) {
                 if (board[j][i] != potentialWinner) isNotWinner = true
             }
             if (!isNotWinner) {
@@ -231,6 +231,15 @@ const displayController = (() => {
         }
     }
 
+    const aiTurn = () => {
+        let aiMove = minimax.nextAIMove(GameBoard)
+        if(!aiMove) return
+        const selectedAiField = document.querySelector(`.field[id_x="${aiMove.x}"][id_y="${aiMove.y}"]`)
+        currentPlayer = Controller.getTurn()
+        Controller.takeTurn(aiMove.x, aiMove.y)
+        selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")`
+    }
+
     const takeAITurnGUI = (e) => {
         const gameStatus = document.querySelector(".game-status")
         let currentPlayer = Controller.getTurn()
@@ -239,37 +248,39 @@ const displayController = (() => {
 
         if (Controller.takeTurn(x, y)) {
             e.target.style.backgroundImage = `url("${currentPlayer.picture}")`
-            let aiMove = minimax.nextAIMove(GameBoard)
-            const selectedAiField = document.querySelector(`.field[id_x="${aiMove.x}"][id_y="${aiMove.y}"]`)
-            currentPlayer = Controller.getTurn()
-            Controller.takeTurn(aiMove.x, aiMove.y)
-            selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")`
+            
             if (Controller.getWinner()) {
                 gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
             } else {
-                (GameBoard.isBoardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
+                if (GameBoard.isBoardFull()) gameStatus.innerHTML = `<h2>No one wins</h2>`
             }
+
+            aiTurn()
+            if (Controller.getWinner()) {
+                gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
+            } else {
+                if (GameBoard.isBoardFull()) gameStatus.innerHTML = `<h2>No one wins</h2>`
+            } 
         }
     }
 
     const startGame = () => {
-        setUp(takeTurnGUI)
+        Controller.restartGame()
+        setUpBoard(takeTurnGUI)
         const gameStatus = document.querySelector(".game-status")
         gameStatus.textContent = `Player ${Controller.getTurn().sign} starts`
     }
 
     const startAiGame = () => {
-        setUp(takeAITurnGUI)
-        const currentPlayer = Controller.getTurn()
-        const firstAiMove = minimax.nextAIMove(GameBoard)
-        const selectedAiField = document.querySelector(`.field[id_x="${firstAiMove.x}"][id_y="${firstAiMove.y}"]`)
-        console.log(firstAiMove)
-        Controller.takeTurn(firstAiMove.x, firstAiMove.y)
-        selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")`
+        Controller.restartGame()
+        setUpBoard(takeAITurnGUI)
+        const gameStatus = document.querySelector(".game-status")
+        gameStatus.textContent = ""
+        aiTurn()
     }
 
 
-    const setUp = (takeTurnFunction) => {
+    const setUpBoard = (takeTurnFunction) => {
         const board = document.querySelector(".board")
         board.innerHTML = ""
         for (let i = 0; i < 3; i++) {
@@ -284,16 +295,22 @@ const displayController = (() => {
         }
     }
 
-    const restartGame = () => {
-        Controller.restartGame()
-        startGame()
+    const setUp = () => {
+        const aiStartButton = document.querySelector(".button#start-ai")
+        aiStartButton.addEventListener('click', (e) => {
+            e.target.textContent = "O"
+            startAiGame()
+            e.target.textContent = "Restart AI Game"
+        })
+
+        const startButton = document.querySelector(".button#start-multi")
+        startButton.addEventListener('click', (e) => {
+            startGame()
+            e.target.textContent = "Restart Multiplayer Game"
+        })
     }
 
-    const restartAiGame = () => {
-        Controller.restartGame()
-        startAiGame()
-    }
-    return { setUp, takeTurnGUI, restartGame, startGame, startAiGame, restartAiGame }
+    return { setUpBoard, takeTurnGUI, startGame, startAiGame, setUp}
 })()
 
-displayController.startAiGame()
+displayController.setUp()
