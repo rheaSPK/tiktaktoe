@@ -159,27 +159,31 @@ const minimax = (() => {
     const minimax = (node, depth, isMaximisingPlayer) => {
         //escape
         if(node.getId().checkWinner() == maximisingPlayer){
-            return depth
+            return {value: depth, node: node}
         }
         if(node.getId().checkWinner() == minimisingPlayer){
-            return - depth
+            return {value: -depth, node: node}
         }
         if(node.getId().boardFull()){
-            return 0
+            return {value: 0, node: node}
         }
 
         if(isMaximisingPlayer){
-            let value = Number.MIN_SAFE_INTEGER
+            let value = {value: Number.MIN_SAFE_INTEGER, node: node}
             for(let key in node.getChildren()){
-                value = Math.max(value, minimax(node.getChildren()[key], depth - 1, false))
+                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false), node : node.getChildren()[key]}
+                let potentialNode = [value, childValue]
+                value = potentialNode.reduce((prev, curr) => prev.value > curr.value ? prev : curr)
             }
             return value
         } else {
-            let value = Number.MAX_SAFE_INTEGER
+            let value = {value: Number.MAX_SAFE_INTEGER, node: node}
             for(let key in node.getChildren()){
-                value = Math.min(value, minimax(node.getChildren()[key], depth - 1, true))
+                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false), node : node.getChildren()[key]}
+                let potentialNode = [value, childValue]
+                value = potentialNode.reduce((prev, curr) => prev.value < curr.value ? prev : curr)
             }
-            return value 
+            return {value: value.value, node: node}
         }
     }
     //problem: board referenziert, das soll es aber nicht
@@ -200,7 +204,7 @@ const minimax = (() => {
 
     const algo = () => {
         const orgNode = buildNode(GameBoardFactory(), true)
-        console.log(minimax(orgNode, 30, true))
+        return minimax(orgNode, 30, true)
     }
     return {buildNode, minimax, algo}
 })()
