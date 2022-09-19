@@ -172,7 +172,7 @@ const minimax = (() => {
     // }
     const maximisingPlayer = 'x'
     const minimisingPlayer = 'o'
-    const deepest = 7
+    const deepest = 9
     const minimax = (node, depth, isMaximisingPlayer) => {
         //escape
         if(node.getId().checkWinner() == maximisingPlayer){
@@ -219,11 +219,12 @@ const minimax = (() => {
         return originNode
     }
 
-    const algo = () => {
-        const orgNode = buildNode(GameBoardFactory([['o', null, null],[null, 'o', null], [null, null, null]]), true)
-        return minimax(orgNode, 7, true)
+    const nextAIMove = (board) => {
+        const orgNode = buildNode(board, true)
+        const moveNode = minimax(orgNode, deepest, true)
+        return {x: moveNode.node.getX(), y: moveNode.node.getY()}
     }
-    return {buildNode, minimax, algo}
+    return {buildNode, minimax, nextAIMove}
 })()
 
 
