@@ -137,9 +137,13 @@ const Controller = (() => {
     return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
-const nodeFactory = (id) => {
+// an welcher stelle wurde letztens welches symbol hinzugefügt
+const nodeFactory = (id, x = null, y = null, symbol = null) => {
     let children = new Array
     let getId = () => id
+    let getX = () => x
+    let getY = () => y 
+    let getSymbol = () => symbol
     let getChildren = () => children
     let addChild = (child) => {
         if(!children.includes(child)) children.push(child)
@@ -154,10 +158,10 @@ const nodeFactory = (id) => {
             }
         }
         for(let key in children){
-            return children[key].bfs(searchId)
+            return children[key].searchIdInChildren(searchId)
         }
     }
-    return {getId, addChild, getChildren, searchIdInChildren}
+    return {getId, addChild, getChildren, searchIdInChildren, getX, getY, getSymbol}
 }
 
 const minimax = (() => {
@@ -200,14 +204,14 @@ const minimax = (() => {
         }
     }
 
-    const buildNode = (board, isMaximisingPlayerNext) => {
-        const originNode = nodeFactory(board)
+    const buildNode = (board, isMaximisingPlayerNext, x=null, y=null, symbol=null) => {
+        const originNode = nodeFactory(board, x, y, symbol)
         const nextPlayer = isMaximisingPlayerNext ? maximisingPlayer : minimisingPlayer
         for(let i = 0; i < 3; i++){
             for(let j = 0; j < 3; j++){
                 const childBoard = GameBoardFactory(board.getBoard())
                 if(childBoard.setBoardItem(i, j, nextPlayer)){
-                    const childNode = buildNode(childBoard, !isMaximisingPlayerNext)
+                    const childNode = buildNode(childBoard, !isMaximisingPlayerNext, i, j, nextPlayer)
                     originNode.addChild(childNode)
                 }
             }
