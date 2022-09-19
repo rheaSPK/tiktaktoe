@@ -34,23 +34,11 @@ const PlayerFactory = (id, sign, picture) => {
     return { id, sign, picture }
 }
 
-
-const Controller = (() => {
-    const player1 = PlayerFactory(0, 'X', `assets/X.jpg`)
-    const player2 = PlayerFactory(1, 'O', `assets/O.jpg`)
-
-    let gameWinner = null
-    let turn = player1
-
-    const getWinner = () => gameWinner
-    const getTurn = () => turn
-
-    const checkWinner = function () {
-        let board = GameBoard.getBoard()
+const winnerChecker = (() => {
+    const checkWinner = (board) => {
         let winner = _winnerInARow(board) || _winnerInAColumn(board) || _winnerOnLRDiagonal(board) || _winnerOnRLDiagonal(board)
         if (winner) {
-            gameWinner = winner
-            return true
+            return winner
         }
         return false
     }
@@ -112,12 +100,26 @@ const Controller = (() => {
         return false
     }
 
+    return {checkWinner}
+})()
+
+
+const Controller = (() => {
+    const player1 = PlayerFactory(0, 'X', `assets/X.jpg`)
+    const player2 = PlayerFactory(1, 'O', `assets/O.jpg`)
+
+    let gameWinner = false
+    let turn = player1
+
+    const getWinner = () => gameWinner
+    const getTurn = () => turn
+
     const takeTurn = (x, y) => {
         //already a winner?
-        if (gameWinner != null) return false;
+        if (gameWinner) return false;
         // setting value worked?
         if (GameBoard.setBoardItem(x, y, turn.sign)) {
-            checkWinner()
+            gameWinner = winnerChecker.checkWinner(GameBoard.getBoard())
             turn == player1 ? turn = player2 : turn = player1
             return true
         }
@@ -130,7 +132,7 @@ const Controller = (() => {
         turn = player1 
     }
 
-    return { takeTurn, checkWinner, getWinner, getTurn, restartGame }
+    return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
 
