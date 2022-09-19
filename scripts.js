@@ -1,10 +1,15 @@
-const GameBoard = (() => {
-    let board = [
-        [null, null, null],
-        [null, null, null],
-        [null, null, null]
-    ]
-    const getBoard = () => board
+const GameBoardFactory = (board = [
+    [null, null, null],
+    [null, null, null],
+    [null, null, null]
+]) => {
+    const getBoard = () => {
+        let copy = new Array(3)
+        for(let i = 0; i< 3; i++){
+            copy[i] = board[i].slice(0)
+        }
+        return copy
+    }
     const setBoardItem = (x, y, value) => {
         if (board[x][y] == null) {
             board[x][y] = value
@@ -27,15 +32,8 @@ const GameBoard = (() => {
             [null, null, null]
         ] 
     }
-    return { setBoardItem, getBoard, boardFull, resetBoard}
-})()
 
-const PlayerFactory = (id, sign, picture) => {
-    return { id, sign, picture }
-}
-
-const winnerChecker = (() => {
-    const checkWinner = (board) => {
+    const checkWinner = () => {
         let winner = _winnerInARow(board) || _winnerInAColumn(board) || _winnerOnLRDiagonal(board) || _winnerOnRLDiagonal(board)
         if (winner) {
             return winner
@@ -99,15 +97,19 @@ const winnerChecker = (() => {
         }
         return false
     }
+    return { setBoardItem, getBoard, boardFull, resetBoard, checkWinner}
+}
 
-    return {checkWinner}
-})()
+const GameBoard = GameBoardFactory()
+
+const PlayerFactory = (id, sign, picture) => {
+    return { id, sign, picture }
+}
 
 
 const Controller = (() => {
     const player1 = PlayerFactory(0, 'X', `assets/X.jpg`)
     const player2 = PlayerFactory(1, 'O', `assets/O.jpg`)
-
     let gameWinner = false
     let turn = player1
 
@@ -119,7 +121,7 @@ const Controller = (() => {
         if (gameWinner) return false;
         // setting value worked?
         if (GameBoard.setBoardItem(x, y, turn.sign)) {
-            gameWinner = winnerChecker.checkWinner(GameBoard.getBoard())
+            gameWinner = GameBoard.checkWinner()
             turn == player1 ? turn = player2 : turn = player1
             return true
         }
@@ -135,22 +137,72 @@ const Controller = (() => {
     return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
-const nodeFactory = (id, value) => {
+const nodeFactory = (id) => {
     let children = new Array
     let getId = () => id
-    let getValue = () => value
     let getChildren = () => children
     let addChild = (child) => {
         if(!children.includes(child)) children.push(child)
     }
-    let setValue = (newValue) => value = newValue
-    return {getValue, getId, setValue, addChild, getChildren}
+    return {getId, addChild, getChildren}
 }
 
 const minimax = (() => {
-    const rate = (node) => {
-        
+    // const rate = (node) => {
+    //     let children = parentNode.getChildren()
+    //     let sumValue = children.reduce((prev, currChild) => prev + currChild.value, 0)
+    //     return sumValue/
+    // }
+    const maximisingPlayer = 'x'
+    const minimisingPlayer = 'o'
+    const deepest = 7
+    const minimax = (node, depth, isMaximisingPlayer) => {
+        //escape
+        if(node.getId().checkWinner() == maximisingPlayer){
+            return depth
+        }
+        if(node.getId().checkWinner() == minimisingPlayer){
+            return - depth
+        }
+        if(node.getId().boardFull()){
+            return 0
+        }
+
+        if(isMaximisingPlayer){
+            let value = Number.MIN_SAFE_INTEGER
+            for(let key in node.getChildren()){
+                value = Math.max(value, minimax(node.getChildren()[key], depth - 1, false))
+            }
+            return value
+        } else {
+            let value = Number.MAX_SAFE_INTEGER
+            for(let key in node.getChildren()){
+                value = Math.min(value, minimax(node.getChildren()[key], depth - 1, true))
+            }
+            return value 
+        }
     }
+    //problem: board referenziert, das soll es aber nicht
+    const buildNode = (board, isMaximisingPlayerNext) => {
+        const originNode = nodeFactory(board)
+        const nextPlayer = isMaximisingPlayerNext ? maximisingPlayer : minimisingPlayer
+        for(let i = 0; i < 3; i++){
+            for(let j = 0; j < 3; j++){
+                const childBoard = GameBoardFactory(board.getBoard())
+                if(childBoard.setBoardItem(i, j, nextPlayer)){
+                    const childNode = buildNode(childBoard, !isMaximisingPlayerNext)
+                    originNode.addChild(childNode)
+                }
+            }
+        }
+        return originNode
+    }
+
+    const algo = () => {
+        const orgNode = buildNode(GameBoardFactory(), true)
+        console.log(minimax(orgNode, 30, true))
+    }
+    return {buildNode, minimax, algo}
 })()
 
 
