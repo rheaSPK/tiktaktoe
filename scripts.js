@@ -135,6 +135,24 @@ const Controller = (() => {
     return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
+const nodeFactory = (id, value) => {
+    let children = new Array
+    let getId = () => id
+    let getValue = () => value
+    let getChildren = () => children
+    let addChild = (child) => {
+        if(!children.includes(child)) children.push(child)
+    }
+    let setValue = (newValue) => value = newValue
+    return {getValue, getId, setValue, addChild, getChildren}
+}
+
+const minimax = (() => {
+    const rate = (node) => {
+        
+    }
+})()
+
 
 const displayController = (() => {
     const takeTurnGUI = (e) => {
