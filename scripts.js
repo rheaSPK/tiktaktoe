@@ -297,17 +297,10 @@ const displayController = (() => {
 
     const setUp = () => {
         const aiStartButton = document.querySelector(".button#start-ai")
-        aiStartButton.addEventListener('click', (e) => {
-            e.target.textContent = "O"
-            startAiGame()
-            e.target.textContent = "Restart AI Game"
-        })
+        aiStartButton.addEventListener('click', startAiGame)
 
         const startButton = document.querySelector(".button#start-multi")
-        startButton.addEventListener('click', (e) => {
-            startGame()
-            e.target.textContent = "Restart Multiplayer Game"
-        })
+        startButton.addEventListener('click', startGame)
     }
 
     return { setUpBoard, takeTurnGUI, startGame, startAiGame, setUp}
