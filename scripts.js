@@ -144,7 +144,20 @@ const nodeFactory = (id) => {
     let addChild = (child) => {
         if(!children.includes(child)) children.push(child)
     }
-    return {getId, addChild, getChildren}
+    let bfs = (searchId) =>{
+        if(children.length == 0){
+            return false
+        }
+        for(let key in children){
+            if(children[key].getId() == searchId){
+                return children[key]
+            }
+        }
+        for(let key in children){
+            return children[key].bfs(searchId)
+        }
+    }
+    return {getId, addChild, getChildren, bfs}
 }
 
 const minimax = (() => {
