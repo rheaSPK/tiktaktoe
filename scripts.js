@@ -144,7 +144,7 @@ const nodeFactory = (id) => {
     let addChild = (child) => {
         if(!children.includes(child)) children.push(child)
     }
-    let bfs = (searchId) =>{
+    let searchIdInChildren = (searchId) =>{
         if(children.length == 0){
             return false
         }
@@ -157,7 +157,7 @@ const nodeFactory = (id) => {
             return children[key].bfs(searchId)
         }
     }
-    return {getId, addChild, getChildren, bfs}
+    return {getId, addChild, getChildren, searchIdInChildren}
 }
 
 const minimax = (() => {
@@ -184,7 +184,7 @@ const minimax = (() => {
         if(isMaximisingPlayer){
             let value = {value: Number.MIN_SAFE_INTEGER, node: node}
             for(let key in node.getChildren()){
-                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false), node : node.getChildren()[key]}
+                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false).value, node : node.getChildren()[key]}
                 let potentialNode = [value, childValue]
                 value = potentialNode.reduce((prev, curr) => prev.value > curr.value ? prev : curr)
             }
@@ -192,14 +192,14 @@ const minimax = (() => {
         } else {
             let value = {value: Number.MAX_SAFE_INTEGER, node: node}
             for(let key in node.getChildren()){
-                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false), node : node.getChildren()[key]}
+                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false).value, node : node.getChildren()[key]}
                 let potentialNode = [value, childValue]
                 value = potentialNode.reduce((prev, curr) => prev.value < curr.value ? prev : curr)
             }
             return {value: value.value, node: node}
         }
     }
-    //problem: board referenziert, das soll es aber nicht
+
     const buildNode = (board, isMaximisingPlayerNext) => {
         const originNode = nodeFactory(board)
         const nextPlayer = isMaximisingPlayerNext ? maximisingPlayer : minimisingPlayer
@@ -216,8 +216,8 @@ const minimax = (() => {
     }
 
     const algo = () => {
-        const orgNode = buildNode(GameBoardFactory(), true)
-        return minimax(orgNode, 30, true)
+        const orgNode = buildNode(GameBoardFactory([['o', null, null],[null, 'o', null], [null, null, null]]), true)
+        return minimax(orgNode, 7, true)
     }
     return {buildNode, minimax, algo}
 })()
