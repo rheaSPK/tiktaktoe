@@ -102,16 +102,16 @@ const GameBoardFactory = (board = [
     return { setBoardItem, getBoard, isBoardFull, resetBoard, checkWinner }
 }
 
-const GameBoard = GameBoardFactory()
 
 const PlayerFactory = (id, sign, picture) => {
     return { id, sign, picture }
 }
 
+const GameBoard = GameBoardFactory()
+const player1 = PlayerFactory(0, 'X', `assets/X.jpg`)
+const player2 = PlayerFactory(1, 'O', `assets/O.jpg`)
 
 const Controller = (() => {
-    const player1 = PlayerFactory(0, 'X', `assets/X.jpg`)
-    const player2 = PlayerFactory(1, 'O', `assets/O.jpg`)
     let gameWinner = false
     let turn = player1
 
@@ -121,7 +121,7 @@ const Controller = (() => {
     const takeTurn = (x, y) => {
         //already a winner?
         if (gameWinner) return false;
-        // setting value worked?
+
         if (GameBoard.setBoardItem(x, y, turn.sign)) {
             gameWinner = GameBoard.checkWinner()
             turn == player1 ? turn = player2 : turn = player1
@@ -139,50 +139,34 @@ const Controller = (() => {
     return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
-
-const nodeFactory = (board, x = null, y = null) => {
+const nodeFactory = (gameBoard) => {
     let children = new Array
-    let getBoard = () =>board 
-    let getX = () => x
-    let getY = () => y
+    let differentFieldToParent = null
+
+    let getGameBoard = () =>gameBoard
+    /* This contains which field in the GameBoard differs from the Gameboard of the parent node*/
+    let setDifferentFieldToParent = (fieldPoint) => {differentFieldToParent = fieldPoint}
+    let getDifferentFieldToParent = () => differentFieldToParent
     let getChildren = () => children
     let addChild = (child) => {
         if (!children.includes(child)) children.push(child)
     }
-    let searchIdInChildren = (searchId) => {
-        if (children.length == 0) {
-            return false
-        }
-        for (let key in children) {
-            if (children[key].getBoard() == searchId) {
-                return children[key]
-            }
-        }
-        for (let key in children) {
-            return children[key].searchIdInChildren(searchId)
-        }
-    }
-    return { getBoard, addChild, getChildren, searchIdInChildren, getX, getY }
+    return { getGameBoard, addChild, getChildren, setDifferentFieldToParent, getDifferentFieldToParent }
 }
 
 const minimax = (() => {
-    // const rate = (node) => {
-    //     let children = parentNode.getChildren()
-    //     let sumValue = children.reduce((prev, currChild) => prev + currChild.value, 0)
-    //     return sumValue/
-    // }
-    const maximisingPlayer = 'X'
-    const minimisingPlayer = 'O'
-    const deepest = 30
+    const maximisingPlayer = player1.sign
+    const minimisingPlayer = player2.sign
+    const deepest = 9
     const minimax = (node, depth, isMaximisingPlayer) => {
-        //escape
-        if (node.getBoard().checkWinner() == maximisingPlayer) {
+
+        if (node.getGameBoard().checkWinner() == maximisingPlayer) {
             return { value: depth, node: node }
         }
-        if (node.getBoard().checkWinner() == minimisingPlayer) {
+        if (node.getGameBoard().checkWinner() == minimisingPlayer) {
             return { value: -depth, node: node }
         }
-        if (node.getBoard().isBoardFull()) {
+        if (node.getGameBoard().isBoardFull()) {
             return { value: 0, node: node }
         }
 
@@ -205,14 +189,15 @@ const minimax = (() => {
         }
     }
 
-    const buildNode = (board, isMaximisingPlayerNext, x = null, y = null, symbol = null) => {
-        const originNode = nodeFactory(board, x, y, symbol)
+    const buildNode = (gameBoard, isMaximisingPlayerNext, differentFieldToParent = null) => {
+        const originNode = nodeFactory(gameBoard)
+        if(differentFieldToParent) originNode.setDifferentFieldToParent(differentFieldToParent)
         const nextPlayer = isMaximisingPlayerNext ? maximisingPlayer : minimisingPlayer
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                const childBoard = GameBoardFactory(board.getBoard())
+                const childBoard = GameBoardFactory(gameBoard.getBoard())
                 if (childBoard.setBoardItem(i, j, nextPlayer)) {
-                    const childNode = buildNode(childBoard, !isMaximisingPlayerNext, i, j, nextPlayer)
+                    const childNode = buildNode(childBoard, !isMaximisingPlayerNext, {x: i, y: j})
                     originNode.addChild(childNode)
                 }
             }
@@ -223,7 +208,7 @@ const minimax = (() => {
     const nextAIMove = (board) => {
         const orgNode = buildNode(board, true)
         const moveNode = minimax(orgNode, deepest, true)
-        return { x: moveNode.node.getX(), y: moveNode.node.getY() }
+        return moveNode.node.getDifferentFieldToParent()
     }
     return { buildNode, minimax, nextAIMove }
 })()
