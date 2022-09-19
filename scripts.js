@@ -254,13 +254,14 @@ const displayController = (() => {
             } else {
                 if (GameBoard.isBoardFull()) gameStatus.innerHTML = `<h2>No one wins</h2>`
             }
-
-            aiTurn()
-            if (Controller.getWinner()) {
-                gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
-            } else {
-                if (GameBoard.isBoardFull()) gameStatus.innerHTML = `<h2>No one wins</h2>`
-            } 
+            setTimeout(()=>{
+                aiTurn()
+                if (Controller.getWinner()) {
+                    gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
+                } else {
+                    if (GameBoard.isBoardFull()) gameStatus.innerHTML = `<h2>No one wins</h2>`
+                } 
+            }, 1000)
         }
     }
 
