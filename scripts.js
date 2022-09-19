@@ -3,9 +3,11 @@ const GameBoardFactory = (board = [
     [null, null, null],
     [null, null, null]
 ]) => {
+
+    //copy board
     const getBoard = () => {
         let copy = new Array(3)
-        for(let i = 0; i< 3; i++){
+        for (let i = 0; i < 3; i++) {
             copy[i] = board[i].slice(0)
         }
         return copy
@@ -17,7 +19,7 @@ const GameBoardFactory = (board = [
         }
         return false
     }
-    const boardFull = () => {
+    const isBoardFull = () => {
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 if (board[i][j] == null) return false
@@ -30,7 +32,7 @@ const GameBoardFactory = (board = [
             [null, null, null],
             [null, null, null],
             [null, null, null]
-        ] 
+        ]
     }
 
     const checkWinner = () => {
@@ -97,7 +99,7 @@ const GameBoardFactory = (board = [
         }
         return false
     }
-    return { setBoardItem, getBoard, boardFull, resetBoard, checkWinner}
+    return { setBoardItem, getBoard, isBoardFull, resetBoard, checkWinner }
 }
 
 const GameBoard = GameBoardFactory()
@@ -131,37 +133,36 @@ const Controller = (() => {
     const restartGame = () => {
         GameBoard.resetBoard()
         gameWinner = null
-        turn = player1 
+        turn = player1
     }
 
     return { takeTurn, getWinner, getTurn, restartGame }
 })()
 
-// an welcher stelle wurde letztens welches symbol hinzugefügt
-const nodeFactory = (id, x = null, y = null, symbol = null) => {
+
+const nodeFactory = (board, x = null, y = null) => {
     let children = new Array
-    let getId = () => id
+    let getBoard = () =>board 
     let getX = () => x
-    let getY = () => y 
-    let getSymbol = () => symbol
+    let getY = () => y
     let getChildren = () => children
     let addChild = (child) => {
-        if(!children.includes(child)) children.push(child)
+        if (!children.includes(child)) children.push(child)
     }
-    let searchIdInChildren = (searchId) =>{
-        if(children.length == 0){
+    let searchIdInChildren = (searchId) => {
+        if (children.length == 0) {
             return false
         }
-        for(let key in children){
-            if(children[key].getId() == searchId){
+        for (let key in children) {
+            if (children[key].getBoard() == searchId) {
                 return children[key]
             }
         }
-        for(let key in children){
+        for (let key in children) {
             return children[key].searchIdInChildren(searchId)
         }
     }
-    return {getId, addChild, getChildren, searchIdInChildren, getX, getY, getSymbol}
+    return { getBoard, addChild, getChildren, searchIdInChildren, getX, getY }
 }
 
 const minimax = (() => {
@@ -175,42 +176,42 @@ const minimax = (() => {
     const deepest = 9
     const minimax = (node, depth, isMaximisingPlayer) => {
         //escape
-        if(node.getId().checkWinner() == maximisingPlayer){
-            return {value: depth, node: node}
+        if (node.getBoard().checkWinner() == maximisingPlayer) {
+            return { value: depth, node: node }
         }
-        if(node.getId().checkWinner() == minimisingPlayer){
-            return {value: -depth, node: node}
+        if (node.getBoard().checkWinner() == minimisingPlayer) {
+            return { value: -depth, node: node }
         }
-        if(node.getId().boardFull()){
-            return {value: 0, node: node}
+        if (node.getBoard().isBoardFull()) {
+            return { value: 0, node: node }
         }
 
-        if(isMaximisingPlayer){
-            let value = {value: Number.MIN_SAFE_INTEGER, node: node}
-            for(let key in node.getChildren()){
-                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false).value, node : node.getChildren()[key]}
+        if (isMaximisingPlayer) {
+            let value = { value: Number.MIN_SAFE_INTEGER, node: node }
+            for (let key in node.getChildren()) {
+                let childValue = { value: minimax(node.getChildren()[key], depth - 1, false).value, node: node.getChildren()[key] }
                 let potentialNode = [value, childValue]
                 value = potentialNode.reduce((prev, curr) => prev.value > curr.value ? prev : curr)
             }
             return value
         } else {
-            let value = {value: Number.MAX_SAFE_INTEGER, node: node}
-            for(let key in node.getChildren()){
-                let childValue = {value : minimax(node.getChildren()[key], depth - 1, false).value, node : node.getChildren()[key]}
+            let value = { value: Number.MAX_SAFE_INTEGER, node: node }
+            for (let key in node.getChildren()) {
+                let childValue = { value: minimax(node.getChildren()[key], depth - 1, false).value, node: node.getChildren()[key] }
                 let potentialNode = [value, childValue]
                 value = potentialNode.reduce((prev, curr) => prev.value < curr.value ? prev : curr)
             }
-            return {value: value.value, node: node}
+            return { value: value.value, node: node }
         }
     }
 
-    const buildNode = (board, isMaximisingPlayerNext, x=null, y=null, symbol=null) => {
+    const buildNode = (board, isMaximisingPlayerNext, x = null, y = null, symbol = null) => {
         const originNode = nodeFactory(board, x, y, symbol)
         const nextPlayer = isMaximisingPlayerNext ? maximisingPlayer : minimisingPlayer
-        for(let i = 0; i < 3; i++){
-            for(let j = 0; j < 3; j++){
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
                 const childBoard = GameBoardFactory(board.getBoard())
-                if(childBoard.setBoardItem(i, j, nextPlayer)){
+                if (childBoard.setBoardItem(i, j, nextPlayer)) {
                     const childNode = buildNode(childBoard, !isMaximisingPlayerNext, i, j, nextPlayer)
                     originNode.addChild(childNode)
                 }
@@ -222,9 +223,9 @@ const minimax = (() => {
     const nextAIMove = (board) => {
         const orgNode = buildNode(board, true)
         const moveNode = minimax(orgNode, deepest, true)
-        return {x: moveNode.node.getX(), y: moveNode.node.getY()}
+        return { x: moveNode.node.getX(), y: moveNode.node.getY() }
     }
-    return {buildNode, minimax, nextAIMove}
+    return { buildNode, minimax, nextAIMove }
 })()
 
 
@@ -236,11 +237,11 @@ const displayController = (() => {
         const y = e.target.getAttribute('id_y')
 
         if (Controller.takeTurn(x, y)) {
-            e.target.style.backgroundImage =`url("${currentPlayer.picture}")`
+            e.target.style.backgroundImage = `url("${currentPlayer.picture}")`
             if (Controller.getWinner()) {
                 gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
             } else {
-                (GameBoard.boardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
+                (GameBoard.isBoardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
             }
         }
     }
@@ -252,16 +253,16 @@ const displayController = (() => {
         const y = e.target.getAttribute('id_y')
 
         if (Controller.takeTurn(x, y)) {
-            e.target.style.backgroundImage =`url("${currentPlayer.picture}")`
+            e.target.style.backgroundImage = `url("${currentPlayer.picture}")`
             let aiMove = minimax.nextAIMove(GameBoard)
             const selectedAiField = document.querySelector(`.field[id_x="${aiMove.x}"][id_y="${aiMove.y}"]`)
             currentPlayer = Controller.getTurn()
             Controller.takeTurn(aiMove.x, aiMove.y)
-            selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")` 
+            selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")`
             if (Controller.getWinner()) {
                 gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
             } else {
-                (GameBoard.boardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
+                (GameBoard.isBoardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
             }
         }
     }
@@ -295,7 +296,7 @@ const displayController = (() => {
                 field.addEventListener('click', takeTurnFunction)
                 board.appendChild(field)
             }
-        } 
+        }
     }
 
     const restartGame = () => {
@@ -307,7 +308,7 @@ const displayController = (() => {
         Controller.restartGame()
         startAiGame()
     }
-    return { setUp, takeTurnGUI, restartGame, startGame, startAiGame, restartAiGame}
+    return { setUp, takeTurnGUI, restartGame, startGame, startAiGame, restartAiGame }
 })()
 
 displayController.startAiGame()
