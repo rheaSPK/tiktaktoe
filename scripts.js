@@ -171,9 +171,9 @@ const minimax = (() => {
     //     let sumValue = children.reduce((prev, currChild) => prev + currChild.value, 0)
     //     return sumValue/
     // }
-    const maximisingPlayer = 'x'
-    const minimisingPlayer = 'o'
-    const deepest = 9
+    const maximisingPlayer = 'X'
+    const minimisingPlayer = 'O'
+    const deepest = 30
     const minimax = (node, depth, isMaximisingPlayer) => {
         //escape
         if (node.getBoard().checkWinner() == maximisingPlayer) {
