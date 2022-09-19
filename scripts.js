@@ -245,7 +245,45 @@ const displayController = (() => {
         }
     }
 
-    const setUp = () => {
+    const takeAITurnGUI = (e) => {
+        const gameStatus = document.querySelector(".game-status")
+        let currentPlayer = Controller.getTurn()
+        const x = e.target.getAttribute('id_x')
+        const y = e.target.getAttribute('id_y')
+
+        if (Controller.takeTurn(x, y)) {
+            e.target.style.backgroundImage =`url("${currentPlayer.picture}")`
+            let aiMove = minimax.nextAIMove(GameBoard)
+            const selectedAiField = document.querySelector(`.field[id_x="${aiMove.x}"][id_y="${aiMove.y}"]`)
+            currentPlayer = Controller.getTurn()
+            Controller.takeTurn(aiMove.x, aiMove.y)
+            selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")` 
+            if (Controller.getWinner()) {
+                gameStatus.innerHTML = `<h2>Player ${Controller.getWinner()} wins</h2>`
+            } else {
+                (GameBoard.boardFull()) ? gameStatus.innerHTML = `<h2>No one wins</h2>` : gameStatus.textContent = `Player ${Controller.getTurn().sign} is next`
+            }
+        }
+    }
+
+    const startGame = () => {
+        setUp(takeTurnGUI)
+        const gameStatus = document.querySelector(".game-status")
+        gameStatus.textContent = `Player ${Controller.getTurn().sign} starts`
+    }
+
+    const startAiGame = () => {
+        setUp(takeAITurnGUI)
+        const currentPlayer = Controller.getTurn()
+        const firstAiMove = minimax.nextAIMove(GameBoard)
+        const selectedAiField = document.querySelector(`.field[id_x="${firstAiMove.x}"][id_y="${firstAiMove.y}"]`)
+        console.log(firstAiMove)
+        Controller.takeTurn(firstAiMove.x, firstAiMove.y)
+        selectedAiField.style.backgroundImage = `url("${currentPlayer.picture}")`
+    }
+
+
+    const setUp = (takeTurnFunction) => {
         const board = document.querySelector(".board")
         board.innerHTML = ""
         for (let i = 0; i < 3; i++) {
@@ -254,19 +292,22 @@ const displayController = (() => {
                 field.setAttribute('id_x', i)
                 field.setAttribute('id_y', j)
                 field.classList.add('field')
-                field.addEventListener('click', takeTurnGUI)
+                field.addEventListener('click', takeTurnFunction)
                 board.appendChild(field)
             }
-        }
-        const gameStatus = document.querySelector(".game-status")
-        gameStatus.textContent = `Player ${Controller.getTurn().sign} starts`
+        } 
     }
 
     const restartGame = () => {
         Controller.restartGame()
-        setUp()
+        startGame()
     }
-    return { setUp, takeTurnGUI, restartGame }
+
+    const restartAiGame = () => {
+        Controller.restartGame()
+        startAiGame()
+    }
+    return { setUp, takeTurnGUI, restartGame, startGame, startAiGame, restartAiGame}
 })()
 
-displayController.setUp()
+displayController.startAiGame()
